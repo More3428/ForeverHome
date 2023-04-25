@@ -1,16 +1,20 @@
 using UnityEngine;
+using System.Collections;
 
 public class HitscanGun : MonoBehaviour
 {
-    public float damage = 10f;
-    public float range = 100f;
+    public Gun gun; // Reference to the Gun script.
     public ParticleSystem muzzleFlash;
+    public float sensitivity = 2.0f; // New variable for mouse sensitivity.
 
     private Transform cameraTransform;
+    private bool isReloading = false; // New variable to track reloading state.
+    private AudioSource gunAudio;
 
     void Start()
     {
         cameraTransform = Camera.main.transform;
+        gunAudio = GetComponent<AudioSource>();
 
         // Set the gun's position to match the camera's position, but at the same height.
         Vector3 position = transform.position;
@@ -28,11 +32,23 @@ public class HitscanGun : MonoBehaviour
         position.z = cameraTransform.position.z;
         transform.position = position;
 
-        transform.rotation = Quaternion.Euler(0f, cameraTransform.eulerAngles.y, 0f);
+        // Rotate the gun based on mouse input.
+        float mouseX = Input.GetAxis("Mouse X") * sensitivity;
+        transform.Rotate(Vector3.up, mouseX, Space.World);
 
-        if (Input.GetButtonDown("Fire1"))
+        // Align the gun's forward vector with the camera's forward vector.
+        transform.rotation = Quaternion.LookRotation(cameraTransform.forward);
+
+        if (Input.GetButtonDown("Fire1") && !isReloading)
         {
-            Shoot();
+            gun.Shoot();
+            gunAudio.Play();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R) && !isReloading && gun.currentAmmo < gun.maxAmmo)
+        {
+            isReloading = true;
+            StartCoroutine(Reload());
         }
 
         // Stop the muzzle flash particle system if the mouse button is not pressed.
@@ -42,23 +58,37 @@ public class HitscanGun : MonoBehaviour
         }
     }
 
-    void Shoot()
+    IEnumerator Reload()
     {
-        // Trigger the muzzle flash particle system.
-        if (muzzleFlash != null && !muzzleFlash.isPlaying)
+        Debug.Log("Reloading...");
+
+        // Move the gun up.
+        Vector3 startPosition = transform.localPosition;
+        Vector3 endPosition = startPosition + Vector3.up * 0.5f;
+        float duration = 0.2f;
+        float elapsed = 0f;
+        while (elapsed < duration)
         {
-            muzzleFlash.Play();
+            transform.localPosition = Vector3.Lerp(startPosition, endPosition, elapsed / duration);
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-        // Cast a ray from the center of the screen in the direction of the camera's forward vector.
-        Ray ray = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
-        if (Physics.Raycast(ray, out RaycastHit hit, range))
+        // Move the gun down.
+        startPosition = transform.localPosition;
+        endPosition = startPosition - Vector3.up * 0.5f;
+        duration = 0.2f;
+        elapsed = 0f;
+        while (elapsed < duration)
         {
-            // Apply damage to the hit object if it has a collider.
-            if (hit.collider != null)
-            {
-                hit.collider.gameObject.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
-            }
+            transform.localPosition = Vector3.Lerp(startPosition, endPosition, elapsed / duration);
+            elapsed += Time.deltaTime;
+            yield return null;
         }
+
+        gun.currentAmmo = gun.maxAmmo;
+        isReloading = false;
+
+        Debug.Log("Finished reloading.");
     }
 }
