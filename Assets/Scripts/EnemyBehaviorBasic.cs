@@ -7,21 +7,18 @@ public class EnemyBehaviorSight : MonoBehaviour
     public float wanderRadius = 5f;
     public float walkSpeed = 2f;
     public float runSpeed = 4f;
-    public float wanderDuration = 5f; //How long it takes to go from one space to another
-    public float persistence = 10f; // Time to search for player after losing sight
+    public float wanderDuration = 5f; 
+    public float persistence = 10f;
     public float orbitDistance = 3f;
     public float health = 100f;
     private float maxHealth = 0;
     public float panickNum = 20f;
-
-    public bool search = false;
 
     bool panicked = false;
     public Transform target;
     private Vector3 initialPosition;
     private Vector3 destination;
     private Vector3 searchPoint;
-    private float lastSeen = 0f;
     private float wanderDelay;
     private float persistenceTimer = 0f;
 
@@ -50,32 +47,44 @@ public class EnemyBehaviorSight : MonoBehaviour
         }
         if (enemySight.canSeePlayer)
         {
+            persistence = 3;
             Pursue();
         }
         else
         {
-            if(lastSeen > 0){
-                Search();
-            }else{
-                Wander();
-                search = false;
-            }
+            Wander();
         }
     }
 
     void Wander()
     {
+        //This loop discerns if we just saw the enemy and have started looking for him.
+        Debug.Log("Wander Mode.");
+        if(persistence > 0)
+        {
+            Debug.Log("We are searching!");
+            // Enemy should choose a random location within a short distance around searchPoint
+            if (Vector3.Distance(transform.position, destination) <= 1f)
+            {
+                destination = GetNewSearchDestination();
+                wanderDelay = 0f;
+            }
+            agent.speed = walkSpeed;
+            agent.destination = destination;
+            StartCoroutine(WaitForWanderDuration());
+        }
+        else
+        {
         wanderDelay += Time.deltaTime;
-
-        if (Vector3.Distance(transform.position, destination) <= 1f || wanderDelay >= wanderDuration)
+        if (Vector3.Distance(transform.position, destination) <= 1f)
         {
             destination = GetNewWanderDestination();
             wanderDelay = 0f;
         }
-
         agent.speed = walkSpeed;
         StartCoroutine(WaitForWanderDuration());
         agent.destination = destination;
+        }
     }
 
     IEnumerator WaitForWanderDuration()
@@ -84,41 +93,36 @@ public class EnemyBehaviorSight : MonoBehaviour
     }
 
 
-    void Search()
+    IEnumerator Search()
     {
-        search = true;
+        //Debug.Log("We are searching!");
+        Debug.Log(persistence + " Hello!");
         searchPoint = target.transform.position;
-        Vector3 newDestination = Random.insideUnitSphere * wanderRadius;
-        newDestination += searchPoint;
-        NavMeshHit navMeshHit;
-        NavMesh.SamplePosition(newDestination, out navMeshHit, wanderRadius, NavMesh.AllAreas);
-        searchPoint = navMeshHit.position;
-        agent.speed = walkSpeed;
-        agent.destination = searchPoint;
-        StartCoroutine(SearchDelay());
-        lastSeen--;
+        //Enemy should choose a random location within a short distance around searchPoint
+        yield return StartCoroutine(SearchDelay());
+        persistence--;
     }
 
     IEnumerator SearchDelay()
     {
+        Debug.Log("Waiting");
         yield return new WaitForSeconds(5);
     }
 
     void Pursue()
     {
         agent.speed = runSpeed;
-        lastSeen = 3f;
-        if (Time.time % 5f == 0f) // Generate a new random number every five seconds
+        searchPoint = target.transform.position;
+        if (Time.time % 5f == 0f) 
         {
             randomNumber = Random.Range(1, 6);
         }
-        //EVERY FIVE SECONDS GENERATE RANDOM NUMBER BETWEEN 1 AND 5 AND STORE IT.
         // Get the distance to the target
         float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
         if (distanceToTarget <= orbitDistance)
         {
-            Vector3 orbitDirection = (transform.position - target.position).normalized;
+            /*Vector3 orbitDirection = (transform.position - target.position).normalized;
             Quaternion orbitRotation = Quaternion.AngleAxis(Time.time * walkSpeed, Vector3.up);
             Vector3 orbitPosition = target.position + orbitRotation * orbitDirection * orbitDistance;
 
@@ -126,9 +130,9 @@ public class EnemyBehaviorSight : MonoBehaviour
 
             float sinValue = Mathf.Sin(Time.time * walkSpeed);
             Vector3 offset = Vector3.right * sinValue;
-            agent.Move(offset);
-            //IF THE NUMBER GENERATED IS 1, WE INSTEAD CALL MELEE_ATTACK(). IF IT ISN'T WE CONTINUE LIKE NORMAL.
-            if (randomNumber == 5) // If the number is 5, call MeleeAttack()
+            agent.Move(offset);*/
+            agent.speed = 0f;
+            if (randomNumber == 5)
             {
                 MeleeAttack();
                 return;
@@ -172,8 +176,17 @@ public class EnemyBehaviorSight : MonoBehaviour
 
     Vector3 GetNewWanderDestination()
     {
-        Vector3 newDestination = Random.insideUnitSphere * wanderRadius;
+        Vector3 newDestination = Random.insideUnitSphere * (wanderRadius/2);
         newDestination += initialPosition;
+        NavMeshHit navMeshHit;
+        NavMesh.SamplePosition(newDestination, out navMeshHit, wanderRadius, NavMesh.AllAreas);
+        return navMeshHit.position;
+    }
+
+    Vector3 GetNewSearchDestination()
+    {
+        Vector3 newDestination = Random.insideUnitSphere * wanderRadius;
+        newDestination += searchPoint;
         NavMeshHit navMeshHit;
         NavMesh.SamplePosition(newDestination, out navMeshHit, wanderRadius, NavMesh.AllAreas);
         return navMeshHit.position;
