@@ -9,33 +9,43 @@ using Vector3 = UnityEngine.Vector3;
 public class CabinetController : MonoBehaviour
 {
     private bool opening;
-    float speed = 0.05f;
-    float timeCount = 0.0f;
-
-    private GameObject leftDoor, rightDoor;
+    
+    private Transform leftDoor, rightDoor;
     private readonly Vector3 leftOpenAngle = new(0f, 160f, 0f);
     private readonly Vector3 rightOpenAngle = new(0f,-160f,0f);
     private readonly Vector3 closeAngle = new(0f, 0f, 0f); 
     
-    
-    void Start()
+    void Awake()
     {
-        leftDoor = transform.Find("Left Door").gameObject;
-        rightDoor = transform.Find("Right Door").gameObject;
+        InteractHandler.OnInteract += OnInteract;
+        leftDoor = transform.Find("Left Door");
+        rightDoor = transform.Find("Right Door");
     }
-
-    void Update()
+    void OnInteract(string caller)
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        if (caller == gameObject.name)
         {
             opening = !opening;
-            timeCount = 0;
+            StopAllCoroutines();
+            StartCoroutine(nameof(Animate));
         }
-
-        rightDoor.transform.rotation = Quaternion.Lerp(rightDoor.transform.rotation, Quaternion.Euler(opening ? rightOpenAngle : closeAngle), timeCount * speed);
-        leftDoor.transform.rotation = Quaternion.Lerp(leftDoor.transform.rotation, Quaternion.Euler(opening ? leftOpenAngle : closeAngle), timeCount * speed);
-        
-        // This is a memory leak
-        timeCount += Time.deltaTime;
+    }
+    IEnumerator Animate()
+    {
+        float elapsedTime = 0;
+        float waitTime = 1f;
+        Quaternion leftStartRot = leftDoor.rotation;
+        Quaternion rightStartRot = rightDoor.rotation;
+        while (elapsedTime < waitTime)
+        {
+            leftDoor.rotation = Quaternion.Lerp(leftStartRot, Quaternion.Euler(opening ? leftOpenAngle : closeAngle), elapsedTime / waitTime);
+            rightDoor.rotation = Quaternion.Lerp(rightStartRot, Quaternion.Euler(opening ? rightOpenAngle : closeAngle), elapsedTime / waitTime);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        rightDoor.rotation = Quaternion.Euler(opening ? rightOpenAngle : closeAngle);
+        leftDoor.rotation = Quaternion.Euler(opening ? leftOpenAngle : closeAngle);
+        yield return null;
     }
 }
+

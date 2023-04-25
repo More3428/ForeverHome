@@ -529,6 +529,7 @@ GameObject:
   - component: {fileID: 841908163}
   - component: {fileID: 841908162}
   - component: {fileID: 841908161}
+  - component: {fileID: 841908164}
   m_Layer: 0
   m_Name: FirstPersonController
   m_TagString: Untagged
@@ -623,6 +624,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &841908164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 841908160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efc39e90e70947742b3ce458bf15afb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  interactableComponent: {fileID: 0}
 --- !u!1001 &944948431
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1651,7 +1666,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &1377396310893805
 GameObject:
   m_ObjectHideFlags: 0
@@ -6027,15 +6042,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 682767585913398125, guid: fa6b8eac00fece54f861acf281234801, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.318
+      value: 0.299
       objectReference: {fileID: 0}
     - target: {fileID: 682767585913398125, guid: fa6b8eac00fece54f861acf281234801, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.5470842
+      value: 0.539
       objectReference: {fileID: 0}
     - target: {fileID: 682767585913398125, guid: fa6b8eac00fece54f861acf281234801, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.4526944
+      value: -2.372
       objectReference: {fileID: 0}
     - target: {fileID: 682767585913398125, guid: fa6b8eac00fece54f861acf281234801, type: 3}
       propertyPath: m_LocalRotation.w

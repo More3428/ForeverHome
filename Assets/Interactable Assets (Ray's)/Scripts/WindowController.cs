@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,16 +7,18 @@ public class WindowController : MonoBehaviour
 {
     private GameObject clearWindow, barredWindow;
     private bool opening;
-    void Awake()
+    private void Awake()
     {
-        clearWindow = transform.Find("Window").gameObject;
+        InteractHandler.OnInteract += OnInteract;
+        clearWindow = transform.Find("Window_Unbarred").gameObject;
         barredWindow = transform.Find("Window_Barred").gameObject;
         clearWindow.SetActive(true);
         barredWindow.SetActive(false);
     }
-    void Update()
+
+    void OnInteract(string caller)
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        if (caller == gameObject.name)
         {
             opening = !opening;
             if (opening)
